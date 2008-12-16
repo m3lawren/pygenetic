@@ -195,7 +195,7 @@ def generator(dict):
 	col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 	return ImageOrganism(dict['size'], [(x, y, r, col)])
 
-target_image = Image.open("target.jpg")
+target_image = Image.open('target.jpg')
 target_dna = list(target_image.getdata())
 
 current = ImageOrganism(target_image.size, [])
@@ -203,14 +203,14 @@ current.calc_score(target_dna)
 x = 0
 while True:
 	x += 1
-	print "Running iteration #" + str(x)
+	print 'Running iteration #' + str(x)
 	candidate = current.mutate()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
 		current = candidate
-		current.image.save("best.png", "PNG")
-		f = open("best.dna", "w")
+		current.image.save('best.png', 'PNG')
+		f = open('best.dna', 'w')
 		f.write(repr(current.dna) + '\n')
 		f.close()
-		print "Replaced current with candidate. (Score: " + str(candidate.score) + ", Num: " + str(len(candidate.dna)) + ")"
+		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
