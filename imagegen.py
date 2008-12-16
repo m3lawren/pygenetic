@@ -3,6 +3,7 @@
 import Image
 import ImageDraw
 
+import pickle
 import random
 
 class ImageOrganism:
@@ -198,13 +199,21 @@ def generator(dict):
 target_image = Image.open('target.jpg')
 target_dna = list(target_image.getdata())
 
-current = ImageOrganism(target_image.size, [])
+init_dna = []
+try:
+	f = open('best.pickle', 'rb')
+	init_dna = pickle.load(f)
+	f.close()
+except:
+	pass
+
+current = ImageOrganism(target_image.size, init_dna)
 current.calc_score(target_dna)
 x = 0
 while True:
 	x += 1
 	print 'Running iteration #' + str(x)
-	candidate = current.mutate()
+	candidate = current.mutate().mutate()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
@@ -212,5 +221,8 @@ while True:
 		current.image.save('best.png', 'PNG')
 		f = open('best.dna', 'w')
 		f.write(repr(current.dna) + '\n')
+		f.close()
+		f = open('best.pickle', 'wb')
+		pickle.dump(current.dna, f)
 		f.close()
 		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
