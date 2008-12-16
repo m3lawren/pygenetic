@@ -46,11 +46,8 @@ class ImageOrganism:
 	image = property(fget=__get_image, doc="""CIL Image""")
 
 	def mutation_add(self):
-		where = random.randint(0, len(self.dna))
 		circle = self.__generate_circle()
-		new_dna = list(self.dna)
-		new_dna.insert(where, circle)
-		return ImageOrganism(self.size, new_dna)
+		return ImageOrganism(self.size, self.dna + [circle])
 	
 	def __mutation_del(self):
 		if len(self.dna) <= 1:
