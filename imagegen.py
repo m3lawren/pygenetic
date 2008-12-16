@@ -202,7 +202,7 @@ def generator(dict):
 	col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 	return ImageOrganism(dict['size'], [(x, y, r, col)])
 
-target_image = Image.open('target.jpg')
+target_image = Image.open('target.jpg').convert('RGB')
 target_dna = list(target_image.getdata())
 
 init_dna = []
@@ -227,7 +227,7 @@ while True:
 	else:
 		candidate = current
 		while candidate == current:
-			candidate = current.mutate()
+			candidate = current.mutate().mutate()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
