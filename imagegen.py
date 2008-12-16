@@ -73,103 +73,56 @@ class ImageOrganism:
 		new_dna[which_dna] = self.__generate_circle()
 		return ImageOrganism(self.size, new_dna)
 
-	def __mutation_xshift(self):
+	def __mutation_shift(self, index, minv, maxv, maxchange):
 		if len(self.dna) == 0:
 			return self
 		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
 		curcirc = self.dna[which_dna]
-		rmin = -min(2, curcirc[0])
-		rmax = min(2, self.size[0] - curcirc[0])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0] + change, curcirc[1], curcirc[2], curcirc[3])
+		rmin = -min(maxchange, curcirc[index], minv)
+		rmax = min(maxchange, maxv - curcirc[index])
+		change = [0,0,0]
+		change[index] = random.randint(rmin + 1, rmax)
+		if change[index] <= 0:
+			change[index] -= 1
+		new_dna[which_dna] = (curcirc[0] + change[0], curcirc[1] + change[1], curcirc[2] + change[2], curcirc[3])
 		return ImageOrganism(self.size, new_dna)
+
+	def __mutation_shift_col(self, index, minv, maxv, maxchange):
+		if len(self.dna) == 0:
+			return self
+		which_dna = random.randint(0, len(self.dna) - 1)
+		new_dna = list(self.dna)
+		curcirc = self.dna[which_dna]
+		rmin = -min(maxchange, curcirc[3][index], minv)
+		rmax = min(maxchange, maxv - curcirc[3][index])
+		change = [0,0,0,0]
+		change[index] = random.randint(rmin + 1, rmax)
+		if change[index] <= 0:
+			change[index] -= 1
+		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0] + change[0], curcirc[3][1] + change[1], curcirc[3][2] + change[2], curcirc[3][3] + change[3]))
+		return ImageOrganism(self.size, new_dna)
+
+	def __mutation_xshift(self):
+		return self.__mutation_shift(0, 0, self.size[0], 2)
 
 	def __mutation_yshift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(2, curcirc[1])
-		rmax = min(2, self.size[1] - curcirc[1])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1] + change, curcirc[2], curcirc[3])
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift(1, 0, self.size[1], 2)
 	
 	def __mutation_radshift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(2, curcirc[2] - 5)
-		rmax = min(2, 75 - curcirc[2])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2] + change, curcirc[3])
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift(2, 0, 75, 2)
 
 	def __mutation_rshift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(5, curcirc[3][0])
-		rmax = min(5, 255 - curcirc[3][0])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0] + change, curcirc[3][1], curcirc[3][2], curcirc[3][3]))
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift_col(0, 0, 255, 5)
 
 	def __mutation_gshift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(5, curcirc[3][1])
-		rmax = min(5, 255 - curcirc[3][1])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0], curcirc[3][1] + change, curcirc[3][2], curcirc[3][3]))
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift_col(1, 0, 255, 5)
 
 	def __mutation_bshift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(5, curcirc[3][2])
-		rmax = min(5, 255 - curcirc[3][2])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0], curcirc[3][1], curcirc[3][2] + change, curcirc[3][3]))
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift_col(2, 0, 255, 5)
 
 	def __mutation_ashift(self):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		curcirc = self.dna[which_dna]
-		rmin = -min(5, curcirc[3][3] - 63)
-		rmax = min(5, 191 - curcirc[3][3])
-		change = random.randint(rmin + 1, rmax)
-		if change <= 0:
-			change -= 1
-		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0], curcirc[3][1], curcirc[3][2], curcirc[3][3] + change))
-		return ImageOrganism(self.size, new_dna)
+		return self.__mutation_shift_col(3, 63, 191, 5)
 
 	def __render_circle(self, circle):
 		image = Image.new("RGBA", self.size)
@@ -247,12 +200,17 @@ target_dna = list(target_image.getdata())
 
 current = ImageOrganism(target_image.size, [])
 current.calc_score(target_dna)
-for x in range(10000):
-	print "Running iteration #" + str(x + 1)
+x = 0
+while True:
+	x += 1
+	print "Running iteration #" + str(x)
 	candidate = current.mutate()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
 		current = candidate
-		current.image.save("candidate." + str(x + 1) + ".png", "PNG")
+		current.image.save("best.png", "PNG")
+		f = open("best.dna", "w")
+		f.write(repr(current.dna) + '\n')
+		f.close()
 		print "Replaced current with candidate. (Score: " + str(candidate.score) + ", Num: " + str(len(candidate.dna)) + ")"
