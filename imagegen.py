@@ -15,9 +15,9 @@ class ImageOrganism:
 		self.__dna = dna
 		self.__image = None
 		self.__mutations = [
-			self.__mutation_add,
-			self.__mutation_del,
-			self.__mutation_rep,
+			#self.__mutation_add,
+			#self.__mutation_del,
+			#self.__mutation_rep,
 			self.__mutation_xshift,
 			self.__mutation_yshift,
 			self.__mutation_radshift,
@@ -26,10 +26,6 @@ class ImageOrganism:
 			self.__mutation_bshift,
 			self.__mutation_ashift,
 			]
-		if len(self.dna) == 0:
-			self.__dna = self.__mutation_add().dna
-			self.__image = None
-			self.image
 
 	def __get_dna(self):
 		return self.__dna
@@ -49,9 +45,7 @@ class ImageOrganism:
 	size = property(fget=__get_size, doc="""Size of the picture. (width, height)""")
 	image = property(fget=__get_image, doc="""CIL Image""")
 
-	def __mutation_add(self):
-		if len(self.dna) >= 50:
-			return self
+	def mutation_add(self):
 		where = random.randint(0, len(self.dna))
 		circle = self.__generate_circle()
 		new_dna = list(self.dna)
@@ -208,15 +202,21 @@ except:
 	pass
 
 current = ImageOrganism(target_image.size, init_dna)
+if len(current.dna) == 0:
+	current = current.mutate_add()
 current.calc_score(target_dna)
 x = 0
+nc = 0
 while True:
 	x += 1
 	print 'Running iteration #' + str(x)
-	candidate = current.mutate().mutate()
+	candidate = current.mutate()
+	if nc == 25:
+		candidate = current.mutate_add()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
+		nc = 0
 		current = candidate
 		current.image.save('best.png', 'PNG')
 		f = open('best.dna', 'w')
@@ -226,3 +226,5 @@ while True:
 		pickle.dump(current.dna, f)
 		f.close()
 		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
+	else:
+		nc += 1
