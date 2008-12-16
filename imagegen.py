@@ -203,7 +203,7 @@ except:
 
 current = ImageOrganism(target_image.size, init_dna)
 if len(current.dna) == 0:
-	current = current.mutate_add()
+	current = current.mutation_add()
 current.calc_score(target_dna)
 x = 0
 nc = 0
@@ -212,7 +212,7 @@ while True:
 	print 'Running iteration #' + str(x)
 	candidate = current.mutate()
 	if nc == 25:
-		candidate = current.mutate_add()
+		candidate = current.mutation_add()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
