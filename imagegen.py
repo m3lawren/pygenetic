@@ -208,7 +208,7 @@ while True:
 	x += 1
 	print 'Running iteration #' + str(x) + ' (nc: ' + str(nc) + ')'
 	candidate = current.mutate()
-	if nc >= 100:
+	if nc >= 20 * len(current.dna):
 		candidate = current.mutation_add()
 	candidate.calc_score(target_dna)
 
