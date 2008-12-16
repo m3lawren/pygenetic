@@ -6,6 +6,17 @@ import ImageDraw
 import pickle
 import random
 
+MAX_RADIUS = 1e1000
+MIN_RADIUS = 3
+CHG_RADIUS = 2
+
+CHG_COORD = 2
+EDGE_OVERLAP = 5
+
+MIN_ALPHA = 31
+MAX_ALPHA = 255
+CHG_COLOR = 5
+
 class ImageOrganism:
 	"""An organism which attempts to approximate an image via translucent circles. Each element in the DNA consists of a 4-tuple (x, y, radius, (r, g, b, a))."""
 
@@ -15,16 +26,9 @@ class ImageOrganism:
 		self.__dna = dna
 		self.__image = None
 		self.__mutations = [
-			#self.__mutation_add,
-			#self.__mutation_del,
-			#self.__mutation_rep,
-			self.__mutation_xshift,
-			self.__mutation_yshift,
-			self.__mutation_radshift,
-			self.__mutation_rshift,
-			self.__mutation_gshift,
-			self.__mutation_bshift,
-			self.__mutation_ashift,
+			self.__mutation_physshift,
+			self.__mutation_colshift,
+			self.__mutation_swap,
 			]
 
 	def __get_dna(self):
@@ -45,76 +49,83 @@ class ImageOrganism:
 	size = property(fget=__get_size, doc="""Size of the picture. (width, height)""")
 	image = property(fget=__get_image, doc="""CIL Image""")
 
-	def mutation_add(self):
-		circle = self.__generate_circle()
-		return ImageOrganism(self.size, self.dna + [circle])
-	
-	def __mutation_del(self):
-		if len(self.dna) <= 1:
+	def __mutation_swap(self):
+		src_dna = random.randint(0, len(self.dna) - 1)
+		dest_dna = random.randint(0, len(self.dna) - 1)
+		if src_dna == dest_dna:
 			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
-		new_dna.pop(which_dna)
+		tmp = new_dna[dest_dna]
+		new_dna[dest_dna] = new_dna[src_dna]
+		new_dna[src_dna] = tmp
 		return ImageOrganism(self.size, new_dna)
 
-	def __mutation_rep(self):
+	def __mutation_shift(self, which_dna, index, minv, maxv, maxchange):
 		if len(self.dna) == 0:
 			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
-		new_dna = list(self.dna)
-		new_dna[which_dna] = self.__generate_circle()
-		return ImageOrganism(self.size, new_dna)
-
-	def __mutation_shift(self, index, minv, maxv, maxchange):
-		if len(self.dna) == 0:
-			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
 		curcirc = self.dna[which_dna]
-		rmin = -min(maxchange, curcirc[index] - minv)
-		rmax = min(maxchange, maxv - curcirc[index])
+		if index == 2:
+			rmin = -min(maxchange, curcirc[2] - minv, curcirc[0] + curcirc[2] - EDGE_OVERLAP, curcirc[1] + curcirc[2] - EDGE_OVERLAP)
+			rmax = min(maxchange, maxv - curcirc[2], self.size[0] - curcirc[0] + curcirc[2] - EDGE_OVERLAP, self.size[1] - curcirc[1] + curcirc[2] - EDGE_OVERLAP)
+		else:
+			rmin = -min(maxchange, curcirc[index] + curcirc[2] - minv - EDGE_OVERLAP)
+			rmax = min(maxchange, maxv - curcirc[index] + curcirc[2] - EDGE_OVERLAP)
+		if rmin > rmax:
+			if rmin > 0:
+				rmax = rmin
+			else:
+				rmin = rmax
 		change = [0,0,0]
-		change[index] = random.randint(rmin + 1, rmax)
-		if change[index] <= 0:
-			change[index] -= 1
+		change[index] = random.randint(rmin, rmax)
 		new_dna[which_dna] = (curcirc[0] + change[0], curcirc[1] + change[1], curcirc[2] + change[2], curcirc[3])
 		return ImageOrganism(self.size, new_dna)
 
-	def __mutation_shift_col(self, index, minv, maxv, maxchange):
+	def __mutation_shift_col(self, which_dna, index, minv, maxv, maxchange):
 		if len(self.dna) == 0:
 			return self
-		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
 		curcirc = self.dna[which_dna]
 		rmin = -min(maxchange, curcirc[3][index] - minv)
 		rmax = min(maxchange, maxv - curcirc[3][index])
+		if rmin > rmax:
+			if rmin > 0:
+				rmax = rmin
+			else:
+				rmin = rmax
 		change = [0,0,0,0]
-		change[index] = random.randint(rmin + 1, rmax)
-		if change[index] <= 0:
-			change[index] -= 1
+		change[index] = random.randint(rmin, rmax)
 		new_dna[which_dna] = (curcirc[0], curcirc[1], curcirc[2], (curcirc[3][0] + change[0], curcirc[3][1] + change[1], curcirc[3][2] + change[2], curcirc[3][3] + change[3]))
 		return ImageOrganism(self.size, new_dna)
 
-	def __mutation_xshift(self):
-		return self.__mutation_shift(0, 0, self.size[0], 2)
+	def __mutation_physshift(self):
+		which_dna = random.randint(0, len(self.dna) - 1)
+		return self.__mutation_xshift(which_dna).__mutation_yshift(which_dna).__mutation_radshift(which_dna)
 
-	def __mutation_yshift(self):
-		return self.__mutation_shift(1, 0, self.size[1], 2)
+	def __mutation_colshift(self):
+		which_dna = random.randint(0, len(self.dna) - 1)
+		return self.__mutation_rshift(which_dna).__mutation_gshift(which_dna).__mutation_bshift(which_dna).__mutation_ashift(which_dna)
+
+	def __mutation_xshift(self, which_dna):
+		return self.__mutation_shift(which_dna, 0, 0, self.size[0], CHG_COORD)
+
+	def __mutation_yshift(self, which_dna):
+		return self.__mutation_shift(which_dna, 1, 0, self.size[1], CHG_COORD)
 	
-	def __mutation_radshift(self):
-		return self.__mutation_shift(2, 2, 750, 2)
+	def __mutation_radshift(self, which_dna):
+		return self.__mutation_shift(which_dna, 2, MIN_RADIUS, MAX_RADIUS, CHG_RADIUS)
 
-	def __mutation_rshift(self):
-		return self.__mutation_shift_col(0, 0, 255, 5)
+	def __mutation_rshift(self, which_dna):
+		return self.__mutation_shift_col(which_dna, 0, 0, 255, CHG_COLOR)
 
-	def __mutation_gshift(self):
-		return self.__mutation_shift_col(1, 0, 255, 5)
+	def __mutation_gshift(self, which_dna):
+		return self.__mutation_shift_col(which_dna, 1, 0, 255, CHG_COLOR)
 
-	def __mutation_bshift(self):
-		return self.__mutation_shift_col(2, 0, 255, 5)
+	def __mutation_bshift(self, which_dna):
+		return self.__mutation_shift_col(which_dna, 2, 0, 255, CHG_COLOR)
 
-	def __mutation_ashift(self):
-		return self.__mutation_shift_col(3, 15, 191, 5)
+	def __mutation_ashift(self, which_dna):
+		return self.__mutation_shift_col(which_dna, 3, MIN_ALPHA, MAX_ALPHA, CHG_COLOR)
 
 	def __render_circle(self, circle):
 		image = Image.new("RGBA", self.size)
@@ -140,6 +151,10 @@ class ImageOrganism:
 		mutation = random.randint(0, len(self.__mutations) - 1)
 		return self.__mutations[mutation]()
 
+	def add_circle(self):
+		circle = self.__generate_circle()
+		return ImageOrganism(self.size, self.dna + [circle])
+
 	def calc_score(self, target):
 		data = list(self.image.getdata())
 		assert len(data) == len(target)
@@ -155,7 +170,7 @@ class ImageOrganism:
 	def __generate_circle(self):
 		x = random.randint(0, self.size[0] - 1)
 		y = random.randint(0, self.size[1] - 1)
-		r = random.randint(5, 75)
+		r = random.randint(5, 25)
 		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(15, 191))
 		return (x, y, r, col)
 
@@ -202,25 +217,35 @@ except:
 
 current = ImageOrganism(target_image.size, init_dna)
 if len(current.dna) == 0:
-	current = current.mutation_add()
+	current = current.add_circle()
 current.calc_score(target_dna)
 while True:
 	x += 1
 	print 'Running iteration #' + str(x) + ' (nc: ' + str(nc) + ')'
-	candidate = current.mutate()
-	if nc >= 25 + 3 * len(current.dna):
-		candidate = current.mutation_add()
+	if nc >= 20 + len(current.dna) and len(current.dna) < 50:
+		candidate = current.add_circle()
+	else:
+		candidate = current
+		while candidate == current:
+			candidate = current.mutate()
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score:
 		nc = 0
 		current = candidate
 		current.image.save('best.png', 'PNG')
+		current.image.save('best.' + str(len(current.dna)) + '.png', 'PNG')
 		f = open('best.dna', 'w')
 		f.write(repr(current.dna) + '\n')
 		f.close()
 		f = open('best.pickle', 'wb')
 		pickle.dump((current.dna, x), f)
+		f.close()
+		f = open('index.html', 'w')
+		f.write('<html><body>')
+		for index in range(len(current.dna)):
+			f.write('<img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /><br />')
+		f.write('</html></body>')
 		f.close()
 		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
 	else:
