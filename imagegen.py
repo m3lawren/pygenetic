@@ -191,9 +191,11 @@ target_image = Image.open('target.jpg')
 target_dna = list(target_image.getdata())
 
 init_dna = []
+x = 0
+nc = 0
 try:
 	f = open('best.pickle', 'rb')
-	init_dna = pickle.load(f)
+	init_dna, x = pickle.load(f)
 	f.close()
 except:
 	pass
@@ -202,11 +204,9 @@ current = ImageOrganism(target_image.size, init_dna)
 if len(current.dna) == 0:
 	current = current.mutation_add()
 current.calc_score(target_dna)
-x = 0
-nc = 0
 while True:
 	x += 1
-	print 'Running iteration #' + str(x)
+	print 'Running iteration #' + str(x) + ' (nc: ' + str(nc) + ')'
 	candidate = current.mutate()
 	if nc >= 100:
 		candidate = current.mutation_add()
@@ -220,7 +220,7 @@ while True:
 		f.write(repr(current.dna) + '\n')
 		f.close()
 		f = open('best.pickle', 'wb')
-		pickle.dump(current.dna, f)
+		pickle.dump((current.dna, x), f)
 		f.close()
 		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
 	else:
