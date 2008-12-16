@@ -211,7 +211,7 @@ while True:
 	x += 1
 	print 'Running iteration #' + str(x)
 	candidate = current.mutate()
-	if nc == 25:
+	if nc >= 25:
 		candidate = current.mutation_add()
 	candidate.calc_score(target_dna)
 
