@@ -102,7 +102,7 @@ class ImageOrganism:
 		return self.__mutation_shift(1, 0, self.size[1], 2)
 	
 	def __mutation_radshift(self):
-		return self.__mutation_shift(2, 0, 750, 2)
+		return self.__mutation_shift(2, 2, 750, 2)
 
 	def __mutation_rshift(self):
 		return self.__mutation_shift_col(0, 0, 255, 5)
