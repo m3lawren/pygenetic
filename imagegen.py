@@ -79,7 +79,7 @@ class ImageOrganism:
 		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
 		curcirc = self.dna[which_dna]
-		rmin = -min(maxchange, curcirc[index], minv)
+		rmin = -min(maxchange, curcirc[index] - minv)
 		rmax = min(maxchange, maxv - curcirc[index])
 		change = [0,0,0]
 		change[index] = random.randint(rmin + 1, rmax)
@@ -94,7 +94,7 @@ class ImageOrganism:
 		which_dna = random.randint(0, len(self.dna) - 1)
 		new_dna = list(self.dna)
 		curcirc = self.dna[which_dna]
-		rmin = -min(maxchange, curcirc[3][index], minv)
+		rmin = -min(maxchange, curcirc[3][index] - minv)
 		rmax = min(maxchange, maxv - curcirc[3][index])
 		change = [0,0,0,0]
 		change[index] = random.randint(rmin + 1, rmax)
