@@ -114,7 +114,7 @@ class ImageOrganism:
 		return self.__mutation_shift_col(2, 0, 255, 5)
 
 	def __mutation_ashift(self):
-		return self.__mutation_shift_col(3, 63, 191, 5)
+		return self.__mutation_shift_col(3, 15, 191, 5)
 
 	def __render_circle(self, circle):
 		image = Image.new("RGBA", self.size)
@@ -156,7 +156,7 @@ class ImageOrganism:
 		x = random.randint(0, self.size[0] - 1)
 		y = random.randint(0, self.size[1] - 1)
 		r = random.randint(5, 75)
-		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(63, 127))
+		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(15, 191))
 		return (x, y, r, col)
 
 def rgb_to_hsl(rgb):
