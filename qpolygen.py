@@ -11,7 +11,7 @@ MAX_INIT_SIZE = 40
 CHG_COORD = 5
 
 MAX_DEGREE = 10
-MAX_POLYGONS = 50
+MAX_POLYGONS = 100
 
 MIN_ALPHA = 31
 MAX_ALPHA = 255
@@ -105,7 +105,7 @@ class ImageOrganism:
 		which_dna = random.randint(0, len(self.dna) - 1) 
 		if self.__which >= 0 and self.__which < len(self.dna):
 			which_dna = self.__which
-		if len(self.dna[which_dna][1]) <= 3:
+		if len(self.dna[which_dna][1]) <= 3 * 2:
 			return self
 		new_dna = list(self.dna)
 		new_verts = list(self.dna[which_dna][1])
