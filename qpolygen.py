@@ -3,6 +3,7 @@
 import Image
 import ImageDraw
 
+import locale
 import pickle
 import random
 
@@ -24,6 +25,7 @@ class ImageOrganism:
 		self.__dna = dna
 		self.__image = None
 		self.__mutation = -1
+		self.__which = -1
 		self.__mutations = [
 			self.__mutation_swap,
 			self.__mutation_del,
@@ -71,26 +73,37 @@ class ImageOrganism:
 		tmp = new_dna[dest_dna]
 		new_dna[dest_dna] = new_dna[src_dna]
 		new_dna[src_dna] = tmp
-		return ImageOrganism(self.size, new_dna)
+		result = ImageOrganism(self.size, new_dna)
+		result.__which = src_dna
+		return result
 
 	def __mutation_vertswap(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		if len(self.dna[which_dna][1]) <= 3:
 			return self
 		new_dna = list(self.dna)
 		new_verts = list(self.dna[which_dna][1])
-		which_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
-		tmp = new_verts[which_vert]
-		new_verts[which_vert] = new_verts[(which_vert + 2) % len(new_verts)]
-		new_verts[(which_vert + 2) % len(new_verts)] = tmp
-		tmp = new_verts[which_vert + 1]
-		new_verts[which_vert + 1] = new_verts[(which_vert + 3) % len(new_verts)]
-		new_verts[(which_vert + 3) % len(new_verts)] = tmp
+		src_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
+		dest_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
+		if src_vert == dest_vert:
+			dest_vert = (src_vert + 2) % len(new_verts)
+		tmp = new_verts[src_vert]
+		new_verts[src_vert] = new_verts[dest_vert]
+		new_verts[dest_vert] = tmp
+		tmp = new_verts[src_vert + 1]
+		new_verts[src_vert + 1] = new_verts[dest_vert + 1]
+		new_verts[dest_vert + 1] = tmp
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
-		return ImageOrganism(self.size, new_dna)
+		result = ImageOrganism(self.size, new_dna)
+		result.__which = which_dna
+		return result
 
 	def __mutation_vertdel(self):
-		which_dna = random.randint(0, len(self.dna) - 1)
+		which_dna = random.randint(0, len(self.dna) - 1) 
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		if len(self.dna[which_dna][1]) <= 3:
 			return self
 		new_dna = list(self.dna)
@@ -99,10 +112,14 @@ class ImageOrganism:
 		new_verts.pop(which_vert)
 		new_verts.pop(which_vert)
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
+		result = ImageOrganism(self.size, new_dna)
+		result.__which = which_dna
 		return ImageOrganism(self.size, new_dna)
 
 	def __mutation_vertadd(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		if len(self.dna[which_dna][1]) >= MAX_DEGREE * 2:
 			return self
 		new_dna = list(self.dna)
@@ -114,10 +131,14 @@ class ImageOrganism:
 		new_verts.insert(which_vert + 2, int(y))
 		new_verts.insert(which_vert + 2, int(x))
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
+		result = ImageOrganism(self.size, new_dna)
+		result.__which = which_dna
 		return ImageOrganism(self.size, new_dna)
 
 	def __mutation_vertrep(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		result = self.__mutation_vertdel()
 		if result == self:
 			result = self.__mutation_vertadd()
@@ -171,14 +192,20 @@ class ImageOrganism:
 
 	def __mutation_physshift(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		which_part = random.randint(0, len(self.dna[which_dna][1]) / 2 - 1) * 2
 		result = self.__mutation_shift(which_dna, which_part, 0, self.size[0], CHG_COORD)
 		result = result.__mutation_shift(which_dna, which_part + 1, 0, self.size[1], CHG_COORD)
+		result.__which = which_dna
 		return result
 
 	def __mutation_colshift(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
+		if self.__which >= 0 and self.__which < len(self.dna):
+			which_dna = self.__which
 		result = self.__mutation_rshift(which_dna).__mutation_gshift(which_dna).__mutation_bshift(which_dna).__mutation_ashift(which_dna)
+		result.__which = which_dna
 		return result
 
 	def __mutation_rshift(self, which_dna):
@@ -212,10 +239,11 @@ class ImageOrganism:
 	def mutate(self):
 		if self.__mutation >= 0:
 			mutation = self.__mutation
-			self.__mutation = -1
 		else:
 			mutation = random.randint(0, len(self.__mutations) - 1)
 		result = self.__mutations[mutation]()
+		self.__which = -1
+		self.__mutation = -1
 		if result != self:
 			result.__mutation = mutation
 		return result
@@ -246,6 +274,8 @@ class ImageOrganism:
 		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(15, 191))
 		return (col, [x, y, x2, y2, x3, y3])
 
+locale.setlocale(locale.LC_ALL, '')
+
 target_image = Image.open('target.jpg').convert('RGB')
 target_dna = list(target_image.getdata())
 
@@ -266,8 +296,8 @@ if len(current.dna) == 0:
 current.calc_score(target_dna)
 while True:
 	x += 1
-	print 'Running iteration #' + str(x) + ' (nc: ' + str(nc) + ')'
-	if nc >= 50 and nc % 2 == 0:
+	print 'Running iteration #' + locale.format('%d', x, True) + ' (nc: ' + locale.format('%d', nc, True) + ')'
+	if nc >= 30 + len(current.dna) and nc % 2 == 0:
 		candidate = current.add_poly()
 	else:
 		candidate = current
@@ -290,9 +320,20 @@ while True:
 		f = open('index.html', 'w')
 		f.write('<html><body><table>')
 		for index in range(len(current.dna)):
-			f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /></td><td><b>Polygons:</b> ' + str(len(history[index + 1][2])) + '<br /><b>Iteration:</b> ' + str(history[index + 1][1]) + '<br /><b>Score:</b> ' + str(history[index + 1][0]) + '</td></tr>')
+			hist_node = history.get(index + 1)
+			polystr = '???'
+			iterstr = '???'
+			scorestr = '???'
+			if hist_node != None:
+				polystr = locale.format('%d', len(hist_node[2]), True)
+				iterstr = locale.format('%d', hist_node[1], True)
+				scorestr = locale.format('%d', hist_node[0], True)
+			f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /></td>' + \
+				     '<td><b>Polygons:</b> ' + polystr + '<br />' + \
+					  '<b>Iteration:</b> ' + iterstr + '<br />' + \
+					  '<b>Score:</b> ' + scorestr + '</td></tr>')
 		f.write('</table></body></html>')
 		f.close()
-		print 'Replaced current with candidate. (Score: ' + str(current.score) + ', Num: ' + str(len(current.dna)) + ', Mut: ' + current.mutation_name + ')'
+		print 'Replaced current with candidate. (Score: ' + locale.format('%d', current.score, True) + ', Num: ' + locale.format('%d', len(current.dna), True) + ', Mut: ' + current.mutation_name + ')'
 	else:
 		nc += 1
