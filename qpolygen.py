@@ -243,10 +243,8 @@ class ImageOrganism:
 		y2 = random.randint(max(0, y - MAX_INIT_SIZE), min(self.size[1] - 1, y + MAX_INIT_SIZE))
 		x3 = random.randint(max(0, (x + x2) / 2 - MAX_INIT_SIZE), min(self.size[0] - 1, (x + x2) / 2 + MAX_INIT_SIZE))
 		y3 = random.randint(max(0, (y + y2) / 2 - MAX_INIT_SIZE), min(self.size[1] - 1, (y + y2) / 2 + MAX_INIT_SIZE))
-		x4 = (x + x2) / 2
-		y4 = (y + y2) / 2
 		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(15, 191))
-		return (col, [x, y, x2, y2, x3, y3, x4, y4])
+		return (col, [x, y, x2, y2, x3, y3])
 
 target_image = Image.open('target.jpg').convert('RGB')
 target_dna = list(target_image.getdata())
