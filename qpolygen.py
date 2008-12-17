@@ -252,9 +252,10 @@ target_dna = list(target_image.getdata())
 init_dna = []
 x = 0
 nc = 0
+history = {}
 try:
 	f = open('best.pickle', 'rb')
-	init_dna, x = pickle.load(f)
+	init_dna, x, history = pickle.load(f)
 	f.close()
 except:
 	pass
@@ -277,20 +278,21 @@ while True:
 	if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
 		nc = 0
 		current = candidate
+		history[len(current.dna)] = [current.score, x, current.dna]
 		current.image.save('best.png', 'PNG')
 		current.image.save('best.' + str(len(current.dna)) + '.png', 'PNG')
 		f = open('best.dna', 'w')
 		f.write(repr(current.dna) + '\n')
 		f.close()
 		f = open('best.pickle', 'wb')
-		pickle.dump((current.dna, x), f)
+		pickle.dump((current.dna, x, history), f)
 		f.close()
 		f = open('index.html', 'w')
-		f.write('<html><body>')
+		f.write('<html><body><table>')
 		for index in range(len(current.dna)):
-			f.write('<img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /><br />')
-		f.write('</html></body>')
+			f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /></td><td><b>Polygons:</b> ' + str(len(history[index + 1][2])) + '<br /><b>Iteration:</b> ' + str(history[index + 1][1]) + '<br /><b>Score:</b> ' + str(history[index + 1][0]) + '</td></tr>')
+		f.write('</table></body></html>')
 		f.close()
-		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ', Mut: ' + candidate.mutation_name + ')'
+		print 'Replaced current with candidate. (Score: ' + str(current.score) + ', Num: ' + str(len(current.dna)) + ', Mut: ' + current.mutation_name + ')'
 	else:
 		nc += 1
