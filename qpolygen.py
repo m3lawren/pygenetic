@@ -11,6 +11,7 @@ MAX_INIT_SIZE = 40
 CHG_COORD = 5
 
 MAX_DEGREE = 10
+MAX_POLYGONS = 50
 
 MIN_ALPHA = 31
 MAX_ALPHA = 255
@@ -242,7 +243,8 @@ class ImageOrganism:
 		else:
 			mutation = random.randint(0, len(self.__mutations) - 1)
 		result = self.__mutations[mutation]()
-		self.__which = -1
+		if self.__mutation == -1:
+			self.__which = -1
 		self.__mutation = -1
 		if result != self:
 			result.__mutation = mutation
@@ -297,7 +299,7 @@ current.calc_score(target_dna)
 while True:
 	x += 1
 	print 'Running iteration #' + locale.format('%d', x, True) + ' (nc: ' + locale.format('%d', nc, True) + ')'
-	if nc >= 30 + len(current.dna) and nc % 2 == 0:
+	if nc >= 30 + len(current.dna) and nc % 2 == 0 and len(current.dna) < MAX_POLYGONS:
 		candidate = current.add_poly()
 	else:
 		candidate = current
