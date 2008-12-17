@@ -9,6 +9,8 @@ import random
 MAX_INIT_SIZE = 40
 CHG_COORD = 5
 
+MAX_DEGREE = 20
+
 MIN_ALPHA = 31
 MAX_ALPHA = 255
 CHG_COLOR = 15
@@ -21,12 +23,19 @@ class ImageOrganism:
 		self.__size = size 
 		self.__dna = dna
 		self.__image = None
+		self.__mutation = -1
 		self.__mutations = [
 			self.__mutation_swap,
 			self.__mutation_del,
 			self.__mutation_physshift,
+			self.__mutation_physshift,
+			self.__mutation_colshift,
 			self.__mutation_colshift,
 			self.__mutation_vertswap,
+			self.__mutation_vertswap,
+			self.__mutation_vertdel,
+			self.__mutation_vertadd,
+			self.__mutation_vertrep,
 			]
 
 	def __get_dna(self):
@@ -42,10 +51,16 @@ class ImageOrganism:
 		self.__render()
 		return self.__image
 
+	def __get_mutation_name(self):
+		if self.__mutation >= 0:
+			return self.__mutations[self.__mutation].__name__
+		return ''
+
 	dna = property(fget=__get_dna, doc="""DNA string.""")
 	score = property(fget=__get_score, doc="""Score of the picture.""")
 	size = property(fget=__get_size, doc="""Size of the picture. (width, height)""")
 	image = property(fget=__get_image, doc="""CIL Image""")
+	mutation_name = property(fget=__get_mutation_name, doc="""Last mutation name.""")
 
 	def __mutation_swap(self):
 		src_dna = random.randint(0, len(self.dna) - 1)
@@ -64,12 +79,52 @@ class ImageOrganism:
 			return self
 		new_dna = list(self.dna)
 		new_verts = list(self.dna[which_dna][1])
-		which_vert = random.randint(0, len(new_verts) - 1)
+		which_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
 		tmp = new_verts[which_vert]
-		new_verts[which_vert] = new_verts[(which_vert + 1) % len(new_verts)]
-		new_verts[(which_vert + 1) % len(new_verts)]
+		new_verts[which_vert] = new_verts[(which_vert + 2) % len(new_verts)]
+		new_verts[(which_vert + 2) % len(new_verts)] = tmp
+		tmp = new_verts[which_vert + 1]
+		new_verts[which_vert + 1] = new_verts[(which_vert + 3) % len(new_verts)]
+		new_verts[(which_vert + 3) % len(new_verts)] = tmp
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
 		return ImageOrganism(self.size, new_dna)
+
+	def __mutation_vertdel(self):
+		which_dna = random.randint(0, len(self.dna) - 1)
+		if len(self.dna[which_dna][1]) <= 3:
+			return self
+		new_dna = list(self.dna)
+		new_verts = list(self.dna[which_dna][1])
+		which_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
+		new_verts.pop(which_vert)
+		new_verts.pop(which_vert)
+		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
+		return ImageOrganism(self.size, new_dna)
+
+	def __mutation_vertadd(self):
+		which_dna = random.randint(0, len(self.dna) - 1)
+		if len(self.dna[which_dna][1]) >= MAX_DEGREE * 2:
+			return self
+		new_dna = list(self.dna)
+		new_verts = list(self.dna[which_dna][1])
+		location = random.random()
+		which_vert = random.randint(0, len(new_verts) / 2 - 1) * 2
+		x = location * new_verts[which_vert] + (1 - location) * new_verts[(which_vert + 2) % len(new_verts)] + random.randint(-1, 1)
+		y = location * new_verts[which_vert + 1] + (1 - location) * new_verts[(which_vert + 3) % len(new_verts)] + random.randint(-1, 1)
+		new_verts.insert(which_vert + 2, int(y))
+		new_verts.insert(which_vert + 2, int(x))
+		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
+		return ImageOrganism(self.size, new_dna)
+
+	def __mutation_vertrep(self):
+		which_dna = random.randint(0, len(self.dna) - 1)
+		result = self.__mutation_vertdel()
+		if result == self:
+			result = self.__mutation_vertadd()
+			result = self.__mutation_vertdel()
+		else:
+			result = self.__mutation_vertadd()
+		return result
 
 	def __mutation_del(self):
 		if len(self.dna) <= 1:
@@ -155,8 +210,14 @@ class ImageOrganism:
 			self.__image.paste(rendered, (0,0), rendered)
 
 	def mutate(self):
-		mutation = random.randint(0, len(self.__mutations) - 1)
+		if self.__mutation >= 0:
+			mutation = self.__mutation
+			self.__mutation = -1
+		else:
+			mutation = random.randint(0, len(self.__mutations) - 1)
 		result = self.__mutations[mutation]()
+		if result != self:
+			result.__mutation = mutation
 		return result
 
 	def add_poly(self):
@@ -215,7 +276,7 @@ while True:
 			candidate = current.mutate()
 	candidate.calc_score(target_dna)
 
-	if candidate.score < current.score:
+	if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
 		nc = 0
 		current = candidate
 		current.image.save('best.png', 'PNG')
@@ -232,6 +293,6 @@ while True:
 			f.write('<img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /><br />')
 		f.write('</html></body>')
 		f.close()
-		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ')'
+		print 'Replaced current with candidate. (Score: ' + str(candidate.score) + ', Num: ' + str(len(candidate.dna)) + ', Mut: ' + candidate.mutation_name + ')'
 	else:
 		nc += 1
