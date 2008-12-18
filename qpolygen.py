@@ -11,7 +11,7 @@ MAX_INIT_SIZE = 40
 CHG_COORD = 5
 
 MAX_DEGREE = 10
-MAX_POLYGONS = 100
+MAX_POLYGONS = 150
 
 MIN_ALPHA = 31
 MAX_ALPHA = 255
@@ -26,15 +26,11 @@ class ImageOrganism:
 		self.__dna = dna
 		self.__image = None
 		self.__mutation = -1
-		self.__which = -1
 		self.__mutations = [
 			self.__mutation_swap,
 			self.__mutation_del,
 			self.__mutation_physshift,
-			self.__mutation_physshift,
 			self.__mutation_colshift,
-			self.__mutation_colshift,
-			self.__mutation_vertswap,
 			self.__mutation_vertswap,
 			self.__mutation_vertdel,
 			self.__mutation_vertadd,
@@ -75,13 +71,10 @@ class ImageOrganism:
 		new_dna[dest_dna] = new_dna[src_dna]
 		new_dna[src_dna] = tmp
 		result = ImageOrganism(self.size, new_dna)
-		result.__which = src_dna
 		return result
 
 	def __mutation_vertswap(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		if len(self.dna[which_dna][1]) <= 3:
 			return self
 		new_dna = list(self.dna)
@@ -98,13 +91,10 @@ class ImageOrganism:
 		new_verts[dest_vert + 1] = tmp
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
 		result = ImageOrganism(self.size, new_dna)
-		result.__which = which_dna
 		return result
 
 	def __mutation_vertdel(self):
 		which_dna = random.randint(0, len(self.dna) - 1) 
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		if len(self.dna[which_dna][1]) <= 3 * 2:
 			return self
 		new_dna = list(self.dna)
@@ -114,13 +104,10 @@ class ImageOrganism:
 		new_verts.pop(which_vert)
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
 		result = ImageOrganism(self.size, new_dna)
-		result.__which = which_dna
 		return ImageOrganism(self.size, new_dna)
 
 	def __mutation_vertadd(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		if len(self.dna[which_dna][1]) >= MAX_DEGREE * 2:
 			return self
 		new_dna = list(self.dna)
@@ -133,13 +120,10 @@ class ImageOrganism:
 		new_verts.insert(which_vert + 2, int(x))
 		new_dna[which_dna] = (new_dna[which_dna][0], new_verts)
 		result = ImageOrganism(self.size, new_dna)
-		result.__which = which_dna
 		return ImageOrganism(self.size, new_dna)
 
 	def __mutation_vertrep(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		result = self.__mutation_vertdel()
 		if result == self:
 			result = self.__mutation_vertadd()
@@ -193,20 +177,14 @@ class ImageOrganism:
 
 	def __mutation_physshift(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		which_part = random.randint(0, len(self.dna[which_dna][1]) / 2 - 1) * 2
 		result = self.__mutation_shift(which_dna, which_part, 0, self.size[0], CHG_COORD)
 		result = result.__mutation_shift(which_dna, which_part + 1, 0, self.size[1], CHG_COORD)
-		result.__which = which_dna
 		return result
 
 	def __mutation_colshift(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if self.__which >= 0 and self.__which < len(self.dna):
-			which_dna = self.__which
 		result = self.__mutation_rshift(which_dna).__mutation_gshift(which_dna).__mutation_bshift(which_dna).__mutation_ashift(which_dna)
-		result.__which = which_dna
 		return result
 
 	def __mutation_rshift(self, which_dna):
@@ -238,16 +216,14 @@ class ImageOrganism:
 			self.__image.paste(rendered, (0,0), rendered)
 
 	def mutate(self):
-		if self.__mutation >= 0:
-			mutation = self.__mutation
-		else:
+		num_mutations = random.randint(1, 3)
+		result = self
+		for x in range(num_mutations):
 			mutation = random.randint(0, len(self.__mutations) - 1)
-		result = self.__mutations[mutation]()
-		if self.__mutation == -1:
-			self.__which = -1
-		self.__mutation = -1
-		if result != self:
-			result.__mutation = mutation
+			nresult = result.__mutations[mutation]()
+			if nresult != result:
+				nresult.__mutation = mutation
+				result = nresult
 		return result
 
 	def add_poly(self):
@@ -299,7 +275,7 @@ current.calc_score(target_dna)
 while True:
 	x += 1
 	print 'Running iteration #' + locale.format('%d', x, True) + ' (nc: ' + locale.format('%d', nc, True) + ')'
-	if nc >= 30 + len(current.dna) and nc % 2 == 0 and len(current.dna) < MAX_POLYGONS:
+	if nc >= 30 + len(current.dna) / 2 and nc % 2 == 0 and len(current.dna) < MAX_POLYGONS:
 		candidate = current.add_poly()
 	else:
 		candidate = current
