@@ -7,6 +7,7 @@ import getopt
 import locale
 import pickle
 import random
+import shutil
 import sys
 
 class ImageOrganism:
@@ -324,14 +325,15 @@ def main(argv):
 		if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
 			current = candidate
 			history[len(current.dna)] = [current.score, x, current.dna]
-			current.image.save('best.png', 'PNG')
 			current.image.save('best.' + str(len(current.dna)) + '.png', 'PNG')
+			shutil.copy('best.' + str(len(current.dna)) + '.png', 'best.png')
 			f = open('best.dna', 'w')
 			f.write(repr(current.dna) + '\n')
 			f.close()
-			f = open('best.pickle', 'wb')
+			f = open('best.pickle.tmp', 'wb')
 			pickle.dump((current.dna, x, history, config), f)
 			f.close()
+			shutil.move('best.pickle.tmp', 'best.pickle')
 			f = open('index.html', 'w')
 			f.write('<html><body><table>')
 			for index in range(len(current.dna)):
@@ -349,7 +351,7 @@ def main(argv):
 						  '<b>Score:</b> ' + scorestr + '</td></tr>')
 			f.write('</table></body></html>')
 			f.close()
-			print 'Replaced current with candidate. (NC: ' + locale.format('%3d', nc, True) + ', Score: ' + locale.format('%d', current.score, True) + ', Num: ' + locale.format('%d', len(current.dna), True) + ', Mut: ' + current.mutation_name + ')'
+			print 'Replaced current with candidate. (NC: ' + locale.format('%3d', nc, True) + ', Score: ' + locale.format('%d', current.score, True) + ', Iter: ' + locale.format('%d', x, True) + ', Poly: ' + locale.format('%d', len(current.dna), True) + ', Mut: ' + current.mutation_name + ')'
 			nc = 0
 		else:
 			nc += 1
