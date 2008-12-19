@@ -268,6 +268,10 @@ try:
 except:
 	pass
 
+for item in history:
+	org = ImageOrganism(target_image.size, history[item][2])
+	org.image.save('best.' + str(len(org.dna)) + '.png', 'PNG')
+
 current = ImageOrganism(target_image.size, init_dna)
 if len(current.dna) == 0:
 	current = current.add_poly()
