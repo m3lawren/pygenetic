@@ -7,15 +7,17 @@ import locale
 import pickle
 import random
 
-MAX_INIT_SIZE = 40
-CHG_COORD = 5
+config = {}
 
-MAX_DEGREE = 20
-MAX_POLYGONS = 150
+config['MAX_INIT_SIZE'] = 40
+config['CHG_COORD'] = 5
 
-MIN_ALPHA = 31
-MAX_ALPHA = 255
-CHG_COLOR = 15
+config['MAX_DEGREE'] = 20
+config['MAX_POLYGONS'] = 150
+
+config['MIN_ALPHA'] = 31
+config['MAX_ALPHA'] = 255
+config['CHG_COLOR'] = 15
 
 class ImageOrganism:
 	"""An organism which attempts to approximate an image via translucent polyangles. Each element in the DNA consists of a 5-tuple (x, y, width, height, (r, g, b, a))."""
@@ -108,7 +110,7 @@ class ImageOrganism:
 
 	def __mutation_vertadd(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
-		if len(self.dna[which_dna][1]) >= MAX_DEGREE * 2:
+		if len(self.dna[which_dna][1]) >= config['MAX_DEGREE'] * 2:
 			return self
 		new_dna = list(self.dna)
 		new_verts = list(self.dna[which_dna][1])
@@ -178,8 +180,8 @@ class ImageOrganism:
 	def __mutation_physshift(self):
 		which_dna = random.randint(0, len(self.dna) - 1)
 		which_part = random.randint(0, len(self.dna[which_dna][1]) / 2 - 1) * 2
-		result = self.__mutation_shift(which_dna, which_part, 0, self.size[0], CHG_COORD)
-		result = result.__mutation_shift(which_dna, which_part + 1, 0, self.size[1], CHG_COORD)
+		result = self.__mutation_shift(which_dna, which_part, 0, self.size[0], config['CHG_COORD'])
+		result = result.__mutation_shift(which_dna, which_part + 1, 0, self.size[1], config['CHG_COORD'])
 		return result
 
 	def __mutation_colshift(self):
@@ -188,16 +190,16 @@ class ImageOrganism:
 		return result
 
 	def __mutation_rshift(self, which_dna):
-		return self.__mutation_shift_col(which_dna, 0, 0, 255, CHG_COLOR)
+		return self.__mutation_shift_col(which_dna, 0, 0, 255, config['CHG_COLOR'])
 
 	def __mutation_gshift(self, which_dna):
-		return self.__mutation_shift_col(which_dna, 1, 0, 255, CHG_COLOR)
+		return self.__mutation_shift_col(which_dna, 1, 0, 255, config['CHG_COLOR'])
 
 	def __mutation_bshift(self, which_dna):
-		return self.__mutation_shift_col(which_dna, 2, 0, 255, CHG_COLOR)
+		return self.__mutation_shift_col(which_dna, 2, 0, 255, config['CHG_COLOR'])
 
 	def __mutation_ashift(self, which_dna):
-		return self.__mutation_shift_col(which_dna, 3, MIN_ALPHA, MAX_ALPHA, CHG_COLOR)
+		return self.__mutation_shift_col(which_dna, 3, config['MIN_ALPHA'], config['MAX_ALPHA'], config['CHG_COLOR'])
 
 	def __render_poly(self, poly):
 		image = Image.new("RGBA", self.size)
@@ -245,10 +247,10 @@ class ImageOrganism:
 	def __generate_poly(self):
 		x = random.randint(0, self.size[0] - 1)
 		y = random.randint(0, self.size[1] - 1)
-		x2 = random.randint(max(0, x - MAX_INIT_SIZE), min(self.size[0] - 1, x + MAX_INIT_SIZE))
-		y2 = random.randint(max(0, y - MAX_INIT_SIZE), min(self.size[1] - 1, y + MAX_INIT_SIZE))
-		x3 = random.randint(max(0, (x + x2) / 2 - MAX_INIT_SIZE), min(self.size[0] - 1, (x + x2) / 2 + MAX_INIT_SIZE))
-		y3 = random.randint(max(0, (y + y2) / 2 - MAX_INIT_SIZE), min(self.size[1] - 1, (y + y2) / 2 + MAX_INIT_SIZE))
+		x2 = random.randint(max(0, x - config['MAX_INIT_SIZE']), min(self.size[0] - 1, x + config['MAX_INIT_SIZE']))
+		y2 = random.randint(max(0, y - config['MAX_INIT_SIZE']), min(self.size[1] - 1, y + config['MAX_INIT_SIZE']))
+		x3 = random.randint(max(0, (x + x2) / 2 - config['MAX_INIT_SIZE']), min(self.size[0] - 1, (x + x2) / 2 + config['MAX_INIT_SIZE']))
+		y3 = random.randint(max(0, (y + y2) / 2 - config['MAX_INIT_SIZE']), min(self.size[1] - 1, (y + y2) / 2 + config['MAX_INIT_SIZE']))
 		col = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255), random.randint(15, 191))
 		return (col, [x, y, x2, y2, x3, y3])
 
@@ -263,10 +265,15 @@ nc = 0
 history = {}
 try:
 	f = open('best.pickle', 'rb')
-	init_dna, x, history = pickle.load(f)
+	init_dna, x, history, config = pickle.load(f)
 	f.close()
 except:
 	pass
+
+print 'Dumping configuration:'
+for item in config:
+	print str(item) + ': ' + str(config[item])
+print ''
 
 for item in history:
 	org = ImageOrganism(target_image.size, history[item][2])
@@ -278,8 +285,8 @@ if len(current.dna) == 0:
 current.calc_score(target_dna)
 while True:
 	x += 1
-	print 'Running iteration #' + locale.format('%d', x, True) + ' (nc: ' + locale.format('%d', nc, True) + ')'
-	if nc >= 30 + len(current.dna) / 2 and nc % 2 == 0 and len(current.dna) < MAX_POLYGONS:
+	#print 'Running iteration #' + locale.format('%d', x, True) + ' (nc: ' + locale.format('%d', nc, True) + ')'
+	if nc >= 30 + len(current.dna) / 2 and nc % 2 == 0 and len(current.dna) < config['MAX_POLYGONS']:
 		candidate = current.add_poly()
 	else:
 		candidate = current
@@ -288,7 +295,6 @@ while True:
 	candidate.calc_score(target_dna)
 
 	if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
-		nc = 0
 		current = candidate
 		history[len(current.dna)] = [current.score, x, current.dna]
 		current.image.save('best.png', 'PNG')
@@ -297,7 +303,7 @@ while True:
 		f.write(repr(current.dna) + '\n')
 		f.close()
 		f = open('best.pickle', 'wb')
-		pickle.dump((current.dna, x, history), f)
+		pickle.dump((current.dna, x, history, config), f)
 		f.close()
 		f = open('index.html', 'w')
 		f.write('<html><body><table>')
@@ -316,6 +322,7 @@ while True:
 					  '<b>Score:</b> ' + scorestr + '</td></tr>')
 		f.write('</table></body></html>')
 		f.close()
-		print 'Replaced current with candidate. (Score: ' + locale.format('%d', current.score, True) + ', Num: ' + locale.format('%d', len(current.dna), True) + ', Mut: ' + current.mutation_name + ')'
+		print 'Replaced current with candidate. (NC: ' + locale.format('%3d', nc, True) + ', Score: ' + locale.format('%d', current.score, True) + ', Num: ' + locale.format('%d', len(current.dna), True) + ', Mut: ' + current.mutation_name + ')'
+		nc = 0
 	else:
 		nc += 1
