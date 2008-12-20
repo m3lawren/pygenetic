@@ -275,8 +275,9 @@ def main(argv):
 	history = {}
 	try:
 		f = open('best.pickle', 'rb')
-		init_dna, x, history, config = pickle.load(f)
+		init_dna, x, history, newconfig = pickle.load(f)
 		f.close()
+		config.update(newconfig)
 	except:
 		pass
 
