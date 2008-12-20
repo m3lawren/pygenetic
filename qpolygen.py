@@ -337,9 +337,9 @@ def main(argv):
 		candidate.calc_score(target_dna)
 
 		if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
-			current = candidate
 			if len(current.dna) != len(candidate.dna):
 				config['generation'] += 1
+			current = candidate
 			history[config['generation']] = [current.score, x, current.dna]
 			current.image.save('best.' + str(config['generation']) + '.png', 'PNG')
 			shutil.copy('best.' + str(config['generation']) + '.png', 'best.png')
