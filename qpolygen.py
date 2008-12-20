@@ -323,6 +323,7 @@ def main(argv):
 	current = ImageOrganism(config, target_image.size, init_dna)
 	if len(current.dna) == 0:
 		current = current.add_poly()
+		config['generation'] += 1
 	current.calc_score(target_dna)
 	while True:
 		x += 1
