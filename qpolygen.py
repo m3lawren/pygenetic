@@ -252,9 +252,6 @@ class ImageOrganism:
 def main(argv):
 	locale.setlocale(locale.LC_ALL, '')
 
-	target_image = Image.open('target.jpg').convert('RGB')
-	target_dna = list(target_image.getdata())
-
 	config = {}
 
 	config['MAX_INIT_SIZE'] = 40
@@ -269,6 +266,8 @@ def main(argv):
 
 	config['WHITE_BG'] = False
 
+	config['image'] = 'target.jpg'
+
 	init_dna = []
 	x = 0
 	nc = 0
@@ -282,7 +281,7 @@ def main(argv):
 		pass
 
 	try:
-		opts, args = getopt.getopt(argv, 'd:p:wb', ['max-degree=', 'max-polygons=', 'white-bg', 'black-bg'])
+		opts, args = getopt.getopt(argv, 'd:p:wbi:', ['max-degree=', 'max-polygons=', 'white-bg', 'black-bg', 'image='])
 	except getopt.GetoptError:
 		print 'invalid arg'
 		sys.exit(1)
@@ -307,6 +306,8 @@ def main(argv):
 			config['WHITE_BG'] = True
 		elif opt in ('-b', '--black-bg'):
 			config['WHITE_BG'] = False
+		elif opt in ('-i', '--image'):
+			config['image'] = arg
 	
 	if config.get('generation') == None:
 		config['generation'] = len(init_dna)
@@ -315,6 +316,9 @@ def main(argv):
 	for item in config:
 		print str(item) + ': ' + str(config[item])
 	print ''
+	
+	target_image = Image.open(config['image']).convert('RGB')
+	target_dna = list(target_image.getdata())
 
 	for item in history:
 		org = ImageOrganism(config, target_image.size, history[item][2])
@@ -362,7 +366,7 @@ def main(argv):
 					polystr = locale.format('%d', len(hist_node[2]), True)
 					iterstr = locale.format('%d', hist_node[1], True)
 					scorestr = locale.format('%d', hist_node[0], True)
-				f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /></td><td><img src=\'target.jpg\' /></td>' + \
+				f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /></td><td><img src=\'' + config['image'] + '\' /></td>' + \
 						  '<td><b>Generation:</b> ' + genstr + '<br />' + \
 						  '<b>Polygons:</b> ' + polystr + '<br />' + \
 						  '<b>Iteration:</b> ' + iterstr + '<br />' + \
