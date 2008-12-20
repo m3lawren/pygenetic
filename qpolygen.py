@@ -205,6 +205,9 @@ class ImageOrganism:
 		if self.__image != None:
 			return
 		self.__image = Image.new("RGB", self.size)
+		if self.__config['WHITE_BG']:
+			d = ImageDraw.Draw(self.__image)
+			d.rectangle(((0,0),self.size), fill=(255,255,255,255))
 		for poly in self.dna:
 			rendered = self.__render_poly(poly)
 			self.__image.paste(rendered, (0,0), rendered)
@@ -264,6 +267,8 @@ def main(argv):
 	config['MAX_ALPHA'] = 255
 	config['CHG_COLOR'] = 15
 
+	config['WHITE_BG'] = False
+
 	init_dna = []
 	x = 0
 	nc = 0
@@ -276,7 +281,7 @@ def main(argv):
 		pass
 
 	try:
-		opts, args = getopt.getopt(argv, 'd:p:', ['max-degree=', 'max-polygons='])
+		opts, args = getopt.getopt(argv, 'd:p:wb', ['max-degree=', 'max-polygons=', 'white-bg', 'black-bg'])
 	except getopt.GetoptError:
 		print 'invalid arg'
 		sys.exit(1)
@@ -297,6 +302,10 @@ def main(argv):
 				print 'invalid args'
 				sys.exit(1)
 			config['MAX_POLYGONS'] = val
+		elif opt in ('-w', '--white-bg'):
+			config['WHITE_BG'] = True
+		elif opt in ('-b', '--black-bg'):
+			config['WHITE_BG'] = False
 
 	print 'Dumping configuration:'
 	for item in config:
