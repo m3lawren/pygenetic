@@ -307,6 +307,9 @@ def main(argv):
 			config['WHITE_BG'] = True
 		elif opt in ('-b', '--black-bg'):
 			config['WHITE_BG'] = False
+	
+	if config.get('generation') == None:
+		config['generation'] = len(init_dna)
 
 	print 'Dumping configuration:'
 	for item in config:
@@ -334,9 +337,11 @@ def main(argv):
 
 		if candidate.score < current.score or (candidate.score <= current.score and candidate.mutation_name in ('__mutation_del', '__mutation_vertdel')):
 			current = candidate
-			history[len(current.dna)] = [current.score, x, current.dna]
-			current.image.save('best.' + str(len(current.dna)) + '.png', 'PNG')
-			shutil.copy('best.' + str(len(current.dna)) + '.png', 'best.png')
+			if len(current.dna) != len(candidate.dna):
+				config['generation'] += 1
+			history[config['generation']] = [current.score, x, current.dna]
+			current.image.save('best.' + str(config['generation']) + '.png', 'PNG')
+			shutil.copy('best.' + str(config['generation']) + '.png', 'best.png')
 			f = open('best.dna', 'w')
 			f.write(repr(current.dna) + '\n')
 			f.close()
@@ -346,17 +351,19 @@ def main(argv):
 			shutil.move('best.pickle.tmp', 'best.pickle')
 			f = open('index.html', 'w')
 			f.write('<html><style><!-- body {font-family: sans; } img { border: 1px dashed #7f7f7f; } td { font-size: 10pt; padding: 5px; } --> </style><body><table cellspacing=\'0\' cellpadding=\'0\'>')
-			for index in range(len(current.dna)):
+			for index in range(config['generation']):
 				hist_node = history.get(index + 1)
 				polystr = '???'
 				iterstr = '???'
 				scorestr = '???'
 				if hist_node != None:
+					genstr = locale.format('%d', index + 1, True)
 					polystr = locale.format('%d', len(hist_node[2]), True)
 					iterstr = locale.format('%d', hist_node[1], True)
 					scorestr = locale.format('%d', hist_node[0], True)
 				f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /></td><td><img src=\'target.jpg\' /></td>' + \
-						  '<td><b>Polygons:</b> ' + polystr + '<br />' + \
+						  '<td><b>Generation:</b> ' + genstr + '<br />' + \
+						  '<b>Polygons:</b> ' + polystr + '<br />' + \
 						  '<b>Iteration:</b> ' + iterstr + '<br />' + \
 						  '<b>Score:</b> ' + scorestr + '</td></tr>')
 			f.write('</table></body></html>')
