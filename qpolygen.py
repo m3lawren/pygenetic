@@ -139,16 +139,14 @@ class ImageOrganism:
 			return self
 		new_dna = list(self.dna)
 		curpoly = self.dna[which_dna]
-		rmin = -min(maxchange, curpoly[1][index] - minv)
-		rmax = min(maxchange, maxv - curpoly[1][index])
-		if rmin > rmax:
-			if rmin > 0:
-				rmax = rmin
-			else:
-				rmin = rmax
-		change = random.randint(rmin, rmax)
+		change = random.randint(-maxchange, maxchange)
+		newv = new_dna[which_dna][1][index] + change
 		new_dna[which_dna] = (new_dna[which_dna][0], list(new_dna[which_dna][1]))
-		new_dna[which_dna][1][index] += change
+		if newv < minv:
+			newv = minv
+		elif newv > maxv:
+			newv = maxv
+		new_dna[which_dna][1][index] = newv
 		return ImageOrganism(self.__config, self.size, new_dna)
 
 	def __mutation_shift_col(self, which_dna, index, minv, maxv, maxchange):
@@ -156,16 +154,13 @@ class ImageOrganism:
 			return self
 		new_dna = list(self.dna)
 		curpoly = self.dna[which_dna]
-		rmin = -min(maxchange, curpoly[0][index] - minv)
-		rmax = min(maxchange, maxv - curpoly[0][index])
-		if rmin > rmax:
-			if rmin > 0:
-				rmax = rmin
-			else:
-				rmin = rmax
-		change = random.randint(rmin, rmax)
+		change = random.randint(-maxchange, maxchange)
 		cols = list(new_dna[which_dna][0])
 		cols[index] += change
+		if cols[index] < minv:
+			cols[index] = minv
+		elif cols[index] > maxv:
+			cols[index] = maxv
 		new_dna[which_dna] = (tuple(cols), new_dna[which_dna][1])
 		return ImageOrganism(self.__config, self.size, new_dna)
 
