@@ -344,7 +344,7 @@ def main(argv):
 			f.close()
 			shutil.move('best.pickle.tmp', 'best.pickle')
 			f = open('index.html', 'w')
-			f.write('<html><body><table>')
+			f.write('<html><style><!-- body {font-family: sans; } img { border: 1px dashed #7f7f7f; } td { font-size: 10pt; padding: 5px; } --> </style><body><table cellspacing=\'0\' cellpadding=\'0\'>')
 			for index in range(len(current.dna)):
 				hist_node = history.get(index + 1)
 				polystr = '???'
@@ -354,7 +354,7 @@ def main(argv):
 					polystr = locale.format('%d', len(hist_node[2]), True)
 					iterstr = locale.format('%d', hist_node[1], True)
 					scorestr = locale.format('%d', hist_node[0], True)
-				f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /><img src=\'target.jpg\' /></td>' + \
+				f.write('<tr><td><img src=\'best.' + str(index + 1) + '.png\' /></td><td><img src=\'target.jpg\' /></td>' + \
 						  '<td><b>Polygons:</b> ' + polystr + '<br />' + \
 						  '<b>Iteration:</b> ' + iterstr + '<br />' + \
 						  '<b>Score:</b> ' + scorestr + '</td></tr>')
