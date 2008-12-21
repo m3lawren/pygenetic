@@ -252,7 +252,7 @@ def main(argv):
 	config['MAX_INIT_SIZE'] = 40
 	config['CHG_COORD'] = 5
 
-	config['MAX_DEGREE'] = 20
+	config['MAX_DEGREE'] = 8
 	config['MAX_POLYGONS'] = 150
 
 	config['MIN_ALPHA'] = 31
